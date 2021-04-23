@@ -5,7 +5,12 @@ class User < ApplicationRecord
                     format:     { with: VALID_EMAIL_REGEX },
                     uniqueness: { case_sensitive: false }
   validates :password, presence: true, length: { minimum: 6 }
+  validates :user_name, presence: true, length: { maximum: 50 }
   has_secure_password
+
+  def custom_response
+    { email: email, user_name: user_name }
+  end
 
   private
 
