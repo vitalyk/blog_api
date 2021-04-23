@@ -1,26 +1,36 @@
 class Api::V1::UsersController < ApplicationController
+  before_action :set_user, only: [:show]
+  before_action :authenticate_user, except: [:create]
+
+  # GET /users
   def index
-    if current_user
-      render json: current_user.custom_response
-    else
-      render json: {
-          error: 'not signed in'
-      }, status: 400
-    end
+    @users = User.all
+
+    render json: @users
   end
 
+  # GET /users/1
+  def show
+    render json: @user
+  end
+
+  # POST /users
   def create
-    user = User.new(user_params)
-    if user.save
-      render json: user
+    @user = User.new(user_params)
+
+    if @user.save
+      render json: @user, status: :created
     else
-      render json: {
-          error: user.errors.full_messages
-      }, status: 400
+      render json: @user.errors, status: :unprocessable_entity
     end
   end
 
-  def user_params
-    params.permit(:email, :user_name, :password, :password_confirmation)
-  end
+  private
+    def set_user
+      @user = User.find(params[:id])
+    end
+
+    def user_params
+      params.permit(:user_name, :email, :password, :password_confirmation)
+    end
 end
