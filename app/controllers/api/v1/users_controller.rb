@@ -1,17 +1,13 @@
 class Api::V1::UsersController < ApplicationController
-  before_action :set_user, only: [:show]
-  before_action :authenticate_user, except: [:create]
-
-  # GET /users
-  def index
-    @users = User.all
-
-    render json: @users
-  end
-
   # GET /users/1
   def show
-    render json: @user
+    if current_user
+        render json: current_user.show_user
+      else
+        render json: {
+            error: 'not signed in'
+        }, status: 400
+      end
   end
 
   # POST /users
@@ -26,6 +22,7 @@ class Api::V1::UsersController < ApplicationController
   end
 
   private
+
     def set_user
       @user = User.find(params[:id])
     end

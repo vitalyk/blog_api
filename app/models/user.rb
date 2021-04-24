@@ -8,6 +8,12 @@ class User < ApplicationRecord
   validates :user_name, presence: true, length: { maximum: 50 }
   has_secure_password
 
+  has_many :articles, dependent: :destroy
+
+  def show_user
+    { email: email, user_name: user_name }
+  end
+
   private
 
     # Converts email to all lower-case.
