@@ -1,11 +1,28 @@
 class Api::V1::ArticlesController < ApplicationController
-  before_action :set_article, except: %i[index create]
-  before_action :authenticate_user, only: %i[create show destroy]
+  before_action :set_article, except: %i[index create show]
+  before_action :authenticate_user, only: %i[create destroy]
 
   def index
-    @articles = Article.all
+    @articles = if params[:category]
+                  Article.all.select { |article| article.category == params[:category].downcase }
+                elsif params[:user_id] then
+                  id = params[:user_id].to_i
+                  Article.all.select { |article| article.user_id == id }
+                else
+                  Article.all
+                end
 
-    render json: @articles
+    decorated_articles = []
+    @articles.each do |article|
+      decorated_articles << {
+          title: article.title,
+          description: prettify_description_length(article),
+          category: article.category,
+          created_at: article.created_at,
+          comments: 0
+      }
+    end
+    render json: decorated_articles
   end
 
   def create
@@ -20,13 +37,21 @@ class Api::V1::ArticlesController < ApplicationController
   end
 
   def show
-    render json: @article, status: :ok
+    @article = Article.find(params[:id])
+    render json:
+               {
+                   title: @article.title,
+                   description: @article.description,
+                   category: @article.category,
+                   created_at: @article.created_at
+               }, status: :ok
   end
 
 
   def destroy
+    @article = current_user.articles.find(params[:id])
     if @article.destroy
-      render head :no_content
+      render json: { message: 'article removed' }
     else
       render json: {
           error: @article.errors.full_messages
@@ -45,5 +70,10 @@ class Api::V1::ArticlesController < ApplicationController
 
   def article_params
     params.permit(:title, :description, :category)
+  end
+
+  def prettify_description_length(article)
+    description = article.description
+    description.length > 500 ? description.slice(0, 500) + "..." :  description
   end
 end
