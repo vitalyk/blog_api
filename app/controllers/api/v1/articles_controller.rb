@@ -19,7 +19,7 @@ class Api::V1::ArticlesController < ApplicationController
           description: prettify_description_length(article),
           category: article.category,
           created_at: article.created_at,
-          comments: 0
+          comments: article.comments.count
       }
     end
     render json: decorated_articles
@@ -46,7 +46,6 @@ class Api::V1::ArticlesController < ApplicationController
                    created_at: @article.created_at
                }, status: :ok
   end
-
 
   def destroy
     @article = current_user.articles.find(params[:id])
